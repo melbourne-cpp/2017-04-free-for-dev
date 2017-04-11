@@ -1,0 +1,21 @@
+language: cpp
+
+dist: trusty
+
+before_install:
+  - sudo apt-get -qy update
+
+install:
+  - sudo apt-get -qy install cppcheck doxygen graphviz lcov
+  - sudo apt-get -qy install qt5-qmake qtbase5-dev libqt5xmlpatterns5-dev
+  - qmake -v
+
+before_script:
+  - cppcheck --error-exitcode=1 --quiet .
+  - export QT_SELECT=qt5
+  - mkdir -p "$TRAVIS_BUILD_DIR-build"
+  - qmake -o "$TRAVIS_BUILD_DIR-build" -r -Wall -Wlogic -Wparser CONFIG+=debug_and_release "$TRAVIS_BUILD_DIR"
+
+script:
+  - make -C "$TRAVIS_BUILD_DIR-build" -j2 all
+  - make -C "$TRAVIS_BUILD_DIR-build" -j2 check TESTARGS=-silent
