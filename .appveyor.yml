@@ -1,0 +1,29 @@
+configuration:
+  - debug
+  - release
+
+install:
+  - 'C:\Qt\5.7\msvc2015_64\bin\qtenv2.bat'
+  - qmake -v
+  - '"%ProgramFiles(x86)%\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x64'
+  - nmake.exe /? > nul
+
+before_build:
+  # Prepare the out-of-source build directory.
+  - mkdir %APPVEYOR_BUILD_FOLDER%-build
+  - qmake -o %APPVEYOR_BUILD_FOLDER%-build -r -Wall -Wlogic -Wparser CONFIG+=%CONFIGURATION% %APPVEYOR_BUILD_FOLDER%
+
+build_script:
+  - cd %APPVEYOR_BUILD_FOLDER%-build
+  - nmake.exe
+
+after_build:
+  # Add a link to the build output within the source directory. This is needed because AppVeyor does
+  # not support extracting artifacts from out-of-source build directories. See 'artifacts' below.
+  - mklink %APPVEYOR_BUILD_FOLDER%\example.exe %APPVEYOR_BUILD_FOLDER%-build\src\%CONFIGURATION%\example.exe
+
+test_script:
+  - if not %CONFIGURATION%==debug nmake.exe check TESTARGS=-silent
+
+artifacts:
+  - path: example.exe
